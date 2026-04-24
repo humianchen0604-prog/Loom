@@ -1514,7 +1514,7 @@
         transition:opacity 0.4s cubic-bezier(0.23,1,0.32,1), transform 0.4s cubic-bezier(0.23,1,0.32,1);
       `;
       toast.innerHTML = `
-        <span style="font-variation-settings:'wdth' 100;">Implement this design from Figma.</span>
+        <span style="font-variation-settings:'wdth' 100;">1 Direction Mismatch Detected</span>
         <button onclick="focusTheme1()"
            style="background:#e61d1d;color:#fff;border-radius:100px;padding:8px 12px;
                   font-size:12px;font-weight:500;font-variation-settings:'wdth' 100;font-family:inherit;
