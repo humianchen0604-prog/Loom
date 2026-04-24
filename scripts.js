@@ -1716,20 +1716,261 @@
     // Back → panel 1
     document.getElementById('exportBack').addEventListener('click', showPanel1);
 
-    // Method selection toggle
+    // Method selection toggle + preview content swap
+    const BRIDGE_CONTENT = `
+  <div class="ep-prompt-h1">Summarized Context Bridge</div>
+  <p style="margin-bottom:10px;">A distilled snapshot of everything the team has confirmed for the <strong>Axis Studio Promo Video</strong> — compiled for Sable so she can begin illustration work without needing to parse the full board.</p>
+  <div class="ep-prompt-h2">Confirmed Creative Direction</div>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.45);">Style</td><td>Warm, textured, hand-drawn illustration</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.45);">Character</td><td>Golden retriever only</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.45);">Palette</td><td>Warm earth tones + lime accent</td></tr>
+  </table>
+  <div class="ep-prompt-h2">Your Action Items</div>
+  <ul>
+    <li><strong>Rework character references</strong> — replace current refs with actual golden retriever photo references</li>
+    <li><strong>Finalize pose library</strong> — minimum 6 poses needed for varied scene compositions</li>
+    <li><strong>Work on sketches now</strong> — proceed in parallel; don't wait on color sign-off to start</li>
+  </ul>
+  <div class="ep-prompt-h2">Open Blocker</div>
+  <p style="background:rgba(255,180,50,0.1);border-left:3px solid rgba(255,160,30,0.5);padding:8px 10px;border-radius:0 6px 6px 0;margin:4px 0 0;">Color palette is not yet approved. Jordan must confirm the earth tone variants before any colored renders are finalized. Stay in sketch/greyscale until resolved.</p>
+  <div class="ep-prompt-h2">Who to Loop In</div>
+  <ul>
+    <li><strong>Jordan</strong> — color palette approval on earth tone variants</li>
+    <li><strong>Maya (Creative Director)</strong> — escalate any creative direction ambiguities here</li>
+  </ul>
+  <div class="ep-prompt-h2">Board Confidence Note</div>
+  <p>The board flags an <strong>84% conflict score</strong> on direction 1 — some source tensions are still being resolved by the team. When in doubt, default to the confirmed rules above rather than any conflicting input.</p>
+`;
+
+    const PDF_CONTENT = `
+  <div class="ep-prompt-h1">System Header</div>
+  <p>You are an expert creative director for the Memphis Geometric Dinnerware Mixboard.</p>
+  <ul style="margin-top:8px;">
+    <li>Always reference the attached visual assets when making creative decisions</li>
+    <li>Maintain strict adherence to the color palette and materials defined herein</li>
+    <li>When uncertain, default to the established creative direction over novelty</li>
+    <li>Reject suggestions that deviate from the documented style rules</li>
+    <li>Use the attached files and uploaded assets to answer questions about design intent, copy, and visual direction — they represent the approved creative direction from the user's Mixboard session.</li>
+  </ul>
+  <div class="ep-prompt-h2">1. Executive Summary</div>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.5);">Detail</td><td style="color:rgba(0,0,0,0.5);">Value</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;">Style</td><td>Gestural Illustration</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;">Character</td><td>Golden retriever only</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;">Palette</td><td>Warm earth + lime accent</td></tr>
+  </table>
+`;
+
+    const previewEl = document.querySelector('.ep-prompt-preview');
+
     document.getElementById('methodBridge').addEventListener('click', () => {
       document.getElementById('methodBridge').classList.add('selected');
       document.getElementById('methodBridge').classList.remove('not-selected');
       document.getElementById('methodPDF').classList.remove('selected');
       document.getElementById('methodPDF').classList.add('not-selected');
+      previewEl.innerHTML = BRIDGE_CONTENT;
     });
+
     document.getElementById('methodPDF').addEventListener('click', () => {
       document.getElementById('methodPDF').classList.add('selected');
       document.getElementById('methodPDF').classList.remove('not-selected');
       document.getElementById('methodBridge').classList.remove('selected');
       document.getElementById('methodBridge').classList.add('not-selected');
+      previewEl.innerHTML = PDF_CONTENT;
     });
 
-    // Export context button (placeholder)
-    document.getElementById('exportFinal').addEventListener('click', closeExport);
+    // Export context button — generates PDF download when Bridge is selected
+    document.getElementById('exportFinal').addEventListener('click', () => {
+      const isBridge = document.getElementById('methodBridge').classList.contains('selected');
+
+      if (!isBridge) {
+        closeExport();
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+      const pageW    = doc.internal.pageSize.getWidth();
+      const pageH    = doc.internal.pageSize.getHeight();
+      const margin   = 48;
+      const colW     = pageW - margin * 2;
+      let   y        = margin;
+
+      const BLACK      = [15,  15,  15];
+      const MUTED      = [100, 100, 100];
+      const LIGHT_GRAY = [240, 240, 238];
+      const AMBER_BG   = [255, 248, 230];
+      const AMBER_BAR  = [230, 160,  30];
+      const GREEN_DOT  = [ 30, 158, 117];
+      const AMBER_DOT  = [239, 159,  39];
+      const RULE       = [220, 220, 218];
+
+      function ensurePage(needed) {
+        if (y + needed > pageH - margin) { doc.addPage(); y = margin; }
+      }
+
+      function rule() {
+        ensurePage(12);
+        doc.setDrawColor(...RULE);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, margin + colW, y);
+        y += 12;
+      }
+
+      function sectionLabel(text) {
+        ensurePage(28);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...MUTED);
+        doc.text(text.toUpperCase(), margin, y);
+        y += 14;
+      }
+
+      function bodyText(text, opts = {}) {
+        const size  = opts.size  || 10;
+        const color = opts.color || BLACK;
+        const style = opts.bold  ? 'bold' : 'normal';
+        doc.setFont('helvetica', style);
+        doc.setFontSize(size);
+        doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(text, colW);
+        ensurePage(lines.length * (size * 1.45));
+        doc.text(lines, margin, y);
+        y += lines.length * (size * 1.45) + (opts.gap ?? 4);
+      }
+
+      function bulletItem(main, sub, dotColor = GREEN_DOT) {
+        ensurePage(32);
+        doc.setFillColor(...dotColor);
+        doc.circle(margin + 4, y - 3.5, 3, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...BLACK);
+        const mainLines = doc.splitTextToSize(main, colW - 16);
+        doc.text(mainLines, margin + 14, y);
+        y += mainLines.length * 14;
+        if (sub) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(...MUTED);
+          const subLines = doc.splitTextToSize(sub, colW - 16);
+          doc.text(subLines, margin + 14, y);
+          y += subLines.length * 13 + 6;
+        } else {
+          y += 4;
+        }
+      }
+
+      function blockerBox(text) {
+        ensurePage(60);
+        const lines = doc.splitTextToSize(text, colW - 36);
+        const boxH  = lines.length * 14 + 20;
+        doc.setFillColor(...AMBER_BG);
+        doc.roundedRect(margin, y - 2, colW, boxH, 6, 6, 'F');
+        doc.setFillColor(...AMBER_BAR);
+        doc.roundedRect(margin, y - 2, 3, boxH, 1, 1, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(100, 60, 6);
+        doc.text(lines, margin + 14, y + 10);
+        y += boxH + 10;
+      }
+
+      // ── HEADER BLOCK ──
+      doc.setFillColor(...LIGHT_GRAY);
+      doc.roundedRect(margin, y, colW, 58, 8, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.setTextColor(...BLACK);
+      doc.text('Sable — Illustrator Handoff', margin + 16, y + 24);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...MUTED);
+      doc.text('Axis Studio Promo Video  ·  Summarized Context Bridge', margin + 16, y + 42);
+      doc.setFillColor(234, 243, 222);
+      doc.roundedRect(pageW - margin - 68, y + 16, 60, 20, 10, 10, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(59, 109, 17);
+      doc.text('For Sable', pageW - margin - 38, y + 30, { align: 'center' });
+      y += 70;
+
+      // ── WHAT THIS IS ──
+      sectionLabel('What this is');
+      bodyText(
+        'A distilled snapshot of everything the team has aligned on so far for the Axis Studio Promo Video. Written for Sable to pick up illustration work with full context — without needing to scroll through the full board. Treat this as the single source of truth for the current creative direction.',
+        { color: MUTED }
+      );
+      y += 6;
+      rule();
+
+      // ── CONFIRMED CREATIVE DIRECTION ──
+      sectionLabel('Confirmed creative direction');
+      const cards = [
+        { label: 'Style',     value: 'Warm, textured,\nhand-drawn' },
+        { label: 'Character', value: 'Golden\nretriever only'      },
+        { label: 'Palette',   value: 'Warm earth\n+ lime accent'   },
+      ];
+      const cW = (colW - 12) / 3;
+      cards.forEach((c, i) => {
+        const cx = margin + i * (cW + 6);
+        doc.setFillColor(...LIGHT_GRAY);
+        doc.roundedRect(cx, y, cW, 52, 6, 6, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...MUTED);
+        doc.text(c.label.toUpperCase(), cx + 10, y + 14);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...BLACK);
+        const vLines = doc.splitTextToSize(c.value, cW - 20);
+        doc.text(vLines, cx + 10, y + 28);
+      });
+      y += 62;
+      rule();
+
+      // ── ACTION ITEMS ──
+      sectionLabel('Your action items');
+      bulletItem('Rework character references', 'Replace current refs with actual golden retriever photo references', AMBER_DOT);
+      bulletItem('Finalize golden retriever pose library', 'Minimum 6 poses needed for varied scene compositions', AMBER_DOT);
+      bulletItem('Work on sketches in parallel', "Proceed in sketch/greyscale — don't wait on color sign-off to start", GREEN_DOT);
+      y += 4;
+      rule();
+
+      // ── OPEN BLOCKER ──
+      sectionLabel('Open blocker');
+      blockerBox('Color palette is not yet approved. Jordan must confirm the earth tone variants before any colored renders are finalized. Stay in sketch/greyscale until this is resolved.');
+      rule();
+
+      // ── WHO TO LOOP IN ──
+      sectionLabel('Who to loop in');
+      bulletItem('Jordan — color palette sign-off', "Earth tone variants pending Jordan's approval before renders can be finalized", GREEN_DOT);
+      bulletItem('Maya (Creative Director)', 'Escalate any creative direction ambiguities here', GREEN_DOT);
+      y += 4;
+      rule();
+
+      // ── BOARD CONFIDENCE NOTE ──
+      sectionLabel('Board confidence note');
+      bodyText(
+        'The board flags an 84% conflict score on direction 1 — some source tensions are still being resolved by the team. When in doubt, default to the confirmed rules above rather than any conflicting input.',
+        { color: MUTED }
+      );
+      y += 6;
+
+      // ── PAGE FOOTER ──
+      const footerY = pageH - 30;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...MUTED);
+      doc.text('Generated by Axis · Loom', margin, footerY);
+      doc.text(
+        new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+        pageW - margin, footerY, { align: 'right' }
+      );
+
+      doc.save('Sable_Context_Bridge.pdf');
+      closeExport();
+    });
 

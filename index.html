@@ -295,22 +295,34 @@
 
         <!-- Preview: fills all space between header and method options -->
         <div class="ep-prompt-preview" style="flex:1;min-height:0;">
-          <div class="ep-prompt-h1">System Header</div>
-          <p>You are an expert creative director for the Memphis Geometric Dinnerware Mixboard.</p>
-          <ul style="margin-top:8px;">
-            <li>Always reference the attached visual assets when making creative decisions</li>
-            <li>Maintain strict adherence to the color palette and materials defined herein</li>
-            <li>When uncertain, default to the established creative direction over novelty</li>
-            <li>Reject suggestions that deviate from the documented style rules</li>
-            <li>Use the attached files and uploaded assets to answer questions about design intent, copy, and visual direction — they represent the approved creative direction from the user's Mixboard session.</li>
-          </ul>
-          <div class="ep-prompt-h2">1. Executive Summary</div>
+          <div class="ep-prompt-h1">Summarized Context Bridge</div>
+          <p style="margin-bottom:10px;">A distilled snapshot of everything the team has confirmed for the <strong>Axis Studio Promo Video</strong> — compiled for Sable so she can begin illustration work without needing to parse the full board.</p>
+
+          <div class="ep-prompt-h2">Confirmed Creative Direction</div>
           <table style="width:100%;border-collapse:collapse;font-size:12px;">
-            <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.5);">Detail</td><td style="color:rgba(0,0,0,0.5);">Value</td></tr>
-            <tr><td style="padding:3px 8px 3px 0;">Style</td><td>Gestural Illustration</td></tr>
-            <tr><td style="padding:3px 8px 3px 0;">Character</td><td>Golden retriever only</td></tr>
-            <tr><td style="padding:3px 8px 3px 0;">Palette</td><td>Warm earth + lime accent</td></tr>
+            <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.45);">Style</td><td>Warm, textured, hand-drawn illustration</td></tr>
+            <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.45);">Character</td><td>Golden retriever only</td></tr>
+            <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.45);">Palette</td><td>Warm earth tones + lime accent</td></tr>
           </table>
+
+          <div class="ep-prompt-h2">Your Action Items</div>
+          <ul>
+            <li><strong>Rework character references</strong> — replace current refs with actual golden retriever photo references</li>
+            <li><strong>Finalize pose library</strong> — minimum 6 poses needed for varied scene compositions</li>
+            <li><strong>Work on sketches now</strong> — proceed in parallel; don't wait on color sign-off to start</li>
+          </ul>
+
+          <div class="ep-prompt-h2">Open Blocker</div>
+          <p style="background:rgba(255,180,50,0.1);border-left:3px solid rgba(255,160,30,0.5);padding:8px 10px;border-radius:0 6px 6px 0;margin:4px 0 0;">Color palette is not yet approved. Jordan must confirm the earth tone variants before any colored renders are finalized. Stay in sketch/greyscale until resolved.</p>
+
+          <div class="ep-prompt-h2">Who to Loop In</div>
+          <ul>
+            <li><strong>Jordan</strong> — color palette approval on earth tone variants</li>
+            <li><strong>Maya (Creative Director)</strong> — escalate any creative direction ambiguities here</li>
+          </ul>
+
+          <div class="ep-prompt-h2">Board Confidence Note</div>
+          <p>The board flags an <strong>84% conflict score</strong> on direction 1 — some source tensions are still being resolved by the team. When in doubt, default to the confirmed rules above rather than any conflicting input.</p>
         </div>
 
         <!-- Method options: always fully visible, never cropped -->
@@ -383,6 +395,7 @@
     <div class="zoom-btn">84%</div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="scripts.js"></script>
 </body>
 </html>
