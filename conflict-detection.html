@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conflict Detection — Axis</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #F0F0F0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', sans-serif;
+    }
+
+    #restartBtn {
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.12);
+      border-radius: 100px; padding: 7px 16px;
+      font-size: 12px; font-weight: 500; color: rgba(0,0,0,0.6);
+      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    #restartBtn:hover { background: #fafafa; }
+
+    /* ─── Animated stroke + glow ─────────────────────────── */
+    @property --cp-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes cp-rotate-stroke { to { --cp-angle: 360deg; } }
+
+    #conflictPanel {
+      position: relative; isolation: isolate;
+      width: 380px; height: 480px; border-radius: 20px;
+    }
+    #conflictPanel::before {
+      content: ''; position: absolute; inset: -2px; border-radius: 22px; z-index: -1;
+      background: conic-gradient(from var(--cp-angle),
+        #ff69b4, #FF529A, #ff4681, #ef4444, #ff614c, #f97316, #ffa938, #ff69b4);
+      animation: cp-rotate-stroke 5s linear infinite;
+    }
+    #conflictPanel::after {
+      content: ''; position: absolute; inset: -24px; border-radius: 44px; z-index: -2;
+      background: conic-gradient(from var(--cp-angle),
+        #ff69b4, #FF529A, #ff4681, #ef4444, #ff614c, #f97316, #ffa938, #ff69b4);
+      animation: cp-rotate-stroke 5s linear infinite;
+      filter: blur(50px); opacity: 0.3;
+    }
+
+    .cp-inner {
+      width: 100%; height: 100%; background: #fff;
+      border-radius: 19px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* ─── Header ─────────────────────────────────────────── */
+    .cp-header { padding: 20px 20px 0; flex-shrink: 0; }
+    .cp-eyebrow {
+      font-size: 10px; font-weight: 500; letter-spacing: 0.07em;
+      text-transform: uppercase; color: rgba(0,0,0,0.3); margin-bottom: 6px;
+    }
+    .cp-title { font-size: 16px; font-weight: 600; color: #000; letter-spacing: -0.3px; line-height: 1.3; }
+    .cp-source-row {
+      display: flex; align-items: center; gap: 7px;
+      margin-top: 10px; padding-bottom: 14px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .cp-avatar { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+    .cp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .cp-source-name { font-size: 12px; font-weight: 500; color: rgba(0,0,0,0.5); }
+
+    /* ─── Scroll body ─────────────────────────────────────── */
+    .cp-body {
+      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+      padding: 14px 20px 22px;
+      display: flex; flex-direction: column;
+    }
+    .cp-body::-webkit-scrollbar { width: 3px; }
+    .cp-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.09); border-radius: 100px; }
+    .cp-spacer { flex: 1; min-height: 0; }
+
+    /* ─── Stage ──────────────────────────────────────────── */
+    .cp-stage {
+      margin-bottom: 12px;
+      opacity: 0; transform: translateY(5px);
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.23,1,0.32,1);
+    }
+    .cp-stage.show { opacity: 1; transform: translateY(0); }
+
+    /* ─── Thinking row ────────────────────────────────────── */
+    .cp-thinking {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 400; color: rgba(0,0,0,0.38); min-height: 18px;
+    }
+    .cp-thinking-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.2); background: transparent; flex-shrink: 0;
+      animation: cp-pulse-dot 1.4s ease-in-out infinite;
+      transition: background 0.45s ease, border-color 0.45s ease;
+    }
+    .cp-thinking-dot.done { background: #34c759; border-color: #34c759; animation: none; }
+    @keyframes cp-pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .cp-thinking-text { font-size: 12px; font-weight: 400; }
+    .cp-thinking-text.done { color: rgba(0,0,0,0.55); }
+
+    /* ─── Narrative ───────────────────────────────────────── */
+    .cp-narrative {
+      font-size: 13px; line-height: 1.65; color: rgba(0,0,0,0.7); margin-top: 7px;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.23,1,0.32,1);
+    }
+    .cp-narrative.show { opacity: 1; transform: translateY(0); }
+
+    /* ─── Quote cards (Figma 119-7055 / 177-424) ─────────── */
+    .cp-quotes { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+    .fig-quote {
+      position: relative;
+      background: #f8f8f8; border-radius: 12px;
+      padding: 14px 44px 14px 16px;
+      min-height: 99px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.23,1,0.32,1);
+    }
+    .fig-quote.show { opacity: 1; transform: translateY(0); }
+    .fig-quote-text { font-size: 12px; font-weight: 400; line-height: 16.5px; color: rgba(0,0,0,0.5); }
+    .fig-quote-footer { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .fig-quote-avatar {
+      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+      overflow: hidden; opacity: 0.5;
+    }
+    .fig-quote-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .fig-quote-attr { font-size: 10px; font-weight: 400; color: rgba(0,0,0,0.4); line-height: 16.5px; }
+    .fig-quote-arrow {
+      position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+      background: rgba(0,0,0,0.04); border: none; border-radius: 100px;
+      width: 28px; height: 28px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fig-quote-arrow:hover { background: rgba(0,0,0,0.08); }
+
+    /* ─── Shimmer skeleton ────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .skel-line {
+      border-radius: 4px; height: 16px;
+      background: linear-gradient(90deg, #e0e0e0 25%, #ebebeb 50%, #e0e0e0 75%);
+      background-size: 1200px 100%;
+      animation: shimmer 1.6s ease-in-out infinite;
+    }
+
+    .cp-opt-wrap {
+      display: flex; flex-direction: column; gap: 12px; margin-top: 10px;
+      opacity: 0; transform: translateY(5px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.23,1,0.32,1);
+    }
+    .cp-opt-wrap.show { opacity: 1; transform: translateY(0); }
+
+    /* Skeleton card */
+    .opt-skel {
+      background: #f8f8f8; border-radius: 20px; height: 100px;
+      padding: 0 17px; display: flex; flex-direction: column;
+      gap: 10px; justify-content: center;
+    }
+    .skel-title { width: 251px; }
+    .skel-desc  { width: 183px; }
+
+    /* ─── Loaded option card (Figma 176-4025) ─────────────── */
+    .opt-card {
+      background: #f8f8f8; border: 1.5px solid transparent;
+      border-radius: 20px; height: 100px;
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.2s ease;
+    }
+    .opt-card.show { opacity: 1; transform: translateY(0); }
+    .opt-card.selected { border-color: #000; }
+    .opt-card-text { flex: 1; min-width: 0; }
+    .opt-card-title {
+      font-size: 12px; font-weight: 590; color: #000;
+      line-height: 16.5px; margin-bottom: 4px;
+      font-variation-settings: 'wdth' 100;
+    }
+    .opt-card-desc {
+      font-size: 12px; font-weight: 400; color: rgba(0,0,0,0.6);
+      line-height: 16.5px; font-variation-settings: 'wdth' 100;
+    }
+    .opt-radio { width: 20px; height: 20px; flex-shrink: 0; }
+
+    /* ─── Action button bar (Figma 119-7490) ─────────────── */
+    .cp-action-bar {
+      display: flex; gap: 8px; align-items: center;
+      margin-top: 14px;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.23,1,0.32,1);
+    }
+    .cp-action-bar.show { opacity: 1; transform: translateY(0); }
+    .cp-btn-back {
+      background: #f2f0ef; border: none; border-radius: 100px;
+      width: 102px; padding: 12px 0;
+      font-size: 14px; font-weight: 500; color: rgba(0,0,0,0.8);
+      letter-spacing: 0.1px; text-align: center; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .cp-btn-back:hover { background: #e8e5e3; }
+    .cp-btn-save {
+      flex: 1; background: #000; border: none; border-radius: 100px;
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 14px; font-weight: 500; color: #fff;
+      letter-spacing: 0.1px; cursor: pointer; white-space: nowrap;
+    }
+    .cp-btn-save:hover { background: #222; }
+    .cp-btn-save-avatar {
+      width: 16px; height: 16px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+    }
+    .cp-btn-save-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  </style>
+</head>
+<body>
+
+  <button id="restartBtn" onclick="restart()">↺ Restart</button>
+
+  <div id="conflictPanel">
+    <div class="cp-inner">
+      <div class="cp-header">
+        <div class="cp-eyebrow">Conflict Detection</div>
+        <div class="cp-title">Detecting conflicting sources<br>from direction 1</div>
+        <div class="cp-source-row">
+          <div class="cp-avatar"><img src="Asstes/Navbar/Sable.png" alt="Sable" /></div>
+          <span class="cp-source-name">Sable, Illustrator</span>
+        </div>
+      </div>
+      <div class="cp-body" id="cpBody">
+        <div class="cp-spacer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Phrase banks (unchanged content) ──────────────────────
+    const PHRASES = [
+      ['Cracking open the brief...', 'Browsing Sable\'s reference collection...', 'Mapping creative territories...', 'Looking for where these paths cross...'],
+      ['Hmm, spotting some divergence here...', 'These don\'t quite line up...', 'Noticing conflicting signals...', 'Something\'s pulling in different directions...'],
+      ['Tracing where the paths diverge...', 'Identifying the decision points...', 'Figuring out which attributes are clashing...', 'Pinpointing the creative fork...', 'Mapping what\'s incompatible...'],
+      ['Figuring out what this actually means for the work...', 'Connecting the dots between these quotes...', 'Unpacking the creative implications...', 'Translating this into illustration decisions...', 'Working out where this leads...', 'Piecing together the real conflict...'],
+      ['Writing this up...', 'Packaging the options...', 'Organizing the recommendation...', 'Polishing the paths forward...', 'Finalizing the resolution choices...'],
+    ];
+    const SUCCESS = [
+      'Brief and references mapped',
+      'Tension mapped, mismatch identified',
+      'Sources located, quotes pulled',
+      'Conflict analyzed, resolutions forming',
+      'Analysis complete',
+    ];
+
+    // 40% faster than original durations
+    const DURATIONS = [4800, 4200, 5400, 7200, 4800];
+    const CYCLE_INTERVAL = 1500; // was 2500
+
+    /* ── Typewriter (40% faster) ──────────────────────────── */
+    const _timers = {};
+    function typeInto(el, text, onDone) {
+      const key = el.id || el;
+      clearTimeout(_timers[key]);
+      const old = el.textContent;
+      let pos = old.length;
+      function erase() {
+        if (pos > 0) { el.textContent = old.slice(0, --pos); _timers[key] = setTimeout(erase, 3); }
+        else type();
+      }
+      function type() {
+        el.textContent = text.slice(0, ++pos);
+        if (pos < text.length) _timers[key] = setTimeout(type, 12);
+        else if (onDone) onDone();
+      }
+      erase();
+    }
+
+    /* ── Cycling ─────────────────────────────────────────── */
+    const _cycling = {};
+    function startCycling(idx, textEl) {
+      const phrases = PHRASES[idx];
+      _cycling[idx] = true;
+      let i = 0;
+      textEl.textContent = phrases[0];
+      function next() {
+        if (!_cycling[idx]) return;
+        setTimeout(() => {
+          if (!_cycling[idx]) return;
+          i = (i + 1) % phrases.length;
+          typeInto(textEl, phrases[i], () => { if (_cycling[idx]) next(); });
+        }, CYCLE_INTERVAL);
+      }
+      next();
+    }
+    function stopCycling(idx) { _cycling[idx] = false; }
+
+    /* ── DOM helpers ─────────────────────────────────────── */
+    const body = document.getElementById('cpBody');
+    function rAF2(fn) { requestAnimationFrame(() => requestAnimationFrame(fn)); }
+    function scrollToBottom(delay) {
+      setTimeout(() => body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' }), delay || 0);
+    }
+
+    function appendStage(idx) {
+      const stage = document.createElement('div');
+      stage.className = 'cp-stage'; stage.id = 'cpStage' + idx;
+      const row = document.createElement('div'); row.className = 'cp-thinking';
+      const dot = document.createElement('div'); dot.className = 'cp-thinking-dot'; dot.id = 'cpDot' + idx;
+      const txt = document.createElement('span'); txt.className = 'cp-thinking-text'; txt.id = 'cpThink' + idx;
+      txt.textContent = PHRASES[idx][0];
+      row.appendChild(dot); row.appendChild(txt);
+      stage.appendChild(row);
+      body.appendChild(stage);
+      rAF2(() => { stage.classList.add('show'); scrollToBottom(); });
+      return stage;
+    }
+
+    function appendNarrative(parent, html, delay) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'cp-narrative'; el.innerHTML = html;
+        parent.appendChild(el);
+        rAF2(() => { el.classList.add('show'); scrollToBottom(); });
+      }, delay || 0);
+    }
+
+    /* ── Quote cards — real avatars ──────────────────────── */
+    function appendQuotes(parent, pairs, startDelay) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cp-quotes';
+      parent.appendChild(wrap);
+
+      pairs.forEach(([quoteHtml, attr, avatarSrc], i) => {
+        setTimeout(() => {
+          const card = document.createElement('div');
+          card.className = 'fig-quote';
+          card.innerHTML = `
+            <div class="fig-quote-text">${quoteHtml}</div>
+            <div class="fig-quote-footer">
+              <div class="fig-quote-avatar"><img src="${avatarSrc}" alt="" /></div>
+              <span class="fig-quote-attr">${attr}</span>
+            </div>
+            <button class="fig-quote-arrow" aria-label="View source">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path d="M1.5 9.5L9.5 1.5M9.5 1.5H3.5M9.5 1.5V7.5" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>`;
+          wrap.appendChild(card);
+          rAF2(() => { card.classList.add('show'); scrollToBottom(); });
+        }, (startDelay || 0) + i * 320);
+      });
+    }
+
+    /* ── Option cards: skeleton → loaded with toggle ─────── */
+    const RADIO_ON  = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#000" stroke-width="2"/><circle cx="10" cy="10" r="5" fill="#000"/></svg>`;
+    const RADIO_OFF = `<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7.5" stroke="rgba(0,0,0,0.25)" stroke-width="1.5"/></svg>`;
+
+    function appendOptions(parent, startDelay) {
+      setTimeout(() => {
+        const wrap = document.createElement('div');
+        wrap.className = 'cp-opt-wrap';
+
+        for (let i = 0; i < 2; i++) {
+          const skel = document.createElement('div');
+          skel.className = 'opt-skel';
+          skel.innerHTML = `<div class="skel-line skel-title"></div><div class="skel-line skel-desc"></div><div class="skel-line skel-desc"></div>`;
+          wrap.appendChild(skel);
+        }
+        parent.appendChild(wrap);
+        rAF2(() => { wrap.classList.add('show'); scrollToBottom(); });
+
+        // Transition to loaded after 2.4s
+        setTimeout(() => {
+          wrap.style.cssText += 'opacity:0;transform:translateY(3px);transition:opacity 0.25s ease,transform 0.25s ease;';
+
+          setTimeout(() => {
+            wrap.innerHTML = '';
+
+            const OPTIONS = [
+              { title: 'Illustration as style, dog as subject', desc: 'Gestural line work applied to a specific, recognizable animal. Warmth through specificity, not cuteness.', selected: true },
+              { title: 'Photography primary, illustration as accent', desc: 'Real dog in campaign images. Illustration reserved for packaging details and secondary materials.', selected: false },
+            ];
+
+            const cardEls = OPTIONS.map((opt, i) => {
+              const card = document.createElement('div');
+              card.className = 'opt-card' + (opt.selected ? ' selected' : '');
+              card.innerHTML = `
+                <div class="opt-card-text">
+                  <div class="opt-card-title">${opt.title}</div>
+                  <div class="opt-card-desc">${opt.desc}</div>
+                </div>
+                <div class="opt-radio">${opt.selected ? RADIO_ON : RADIO_OFF}</div>`;
+              wrap.appendChild(card);
+              setTimeout(() => rAF2(() => card.classList.add('show')), i * 140);
+              return card;
+            });
+
+            // Toggle selection between cards
+            cardEls.forEach((card, i) => {
+              card.addEventListener('click', () => {
+                const other = cardEls[1 - i];
+                card.classList.add('selected');
+                other.classList.remove('selected');
+                card.querySelector('.opt-radio').innerHTML = RADIO_ON;
+                other.querySelector('.opt-radio').innerHTML = RADIO_OFF;
+              });
+            });
+
+            wrap.style.opacity = '1';
+            wrap.style.transform = 'translateY(0)';
+            scrollToBottom();
+          }, 280);
+        }, 2400);
+      }, startDelay || 0);
+    }
+
+    /* ── Action button bar (Figma 119-7490) ──────────────── */
+    function appendActionBar(parent, delay) {
+      setTimeout(() => {
+        const bar = document.createElement('div');
+        bar.className = 'cp-action-bar';
+        bar.innerHTML = `
+          <button class="cp-btn-back">Back</button>
+          <button class="cp-btn-save">
+            <div class="cp-btn-save-avatar"><img src="Asstes/Navbar/Sable.png" alt="" /></div>
+            Save as Todo
+          </button>`;
+        parent.appendChild(bar);
+        rAF2(() => { bar.classList.add('show'); scrollToBottom(); });
+      }, delay || 0);
+    }
+
+    /* ── Mark done ───────────────────────────────────────── */
+    function markDone(idx, onDone) {
+      const dot = document.getElementById('cpDot' + idx);
+      const textEl = document.getElementById('cpThink' + idx);
+      if (dot) dot.classList.add('done');
+      if (textEl) { textEl.classList.add('done'); typeInto(textEl, SUCCESS[idx], onDone); }
+      else if (onDone) onDone();
+    }
+
+    /* ── Phase content ───────────────────────────────────── */
+    function revealContent(idx, stage, onDone) {
+      switch (idx) {
+        case 0:
+          if (onDone) onDone(); break;
+
+        case 1:
+          appendNarrative(stage, 'Found where they split. Let me pinpoint the specific creative choices where this matters.', 350);
+          setTimeout(onDone, 600); break;
+
+        case 2:
+          appendNarrative(stage, 'Here\'s what I found. Two different stories about what this dog should be:', 300);
+          appendQuotes(stage, [
+            ['"I don\'t want a cute dog. I want <em>my</em> dog. There\'s a difference and I can feel it immediately when I see a sketch."',
+             'Jordan Ellis, Founder — Biscuit', 'Asstes/Client.png'],
+            ['"The work must earn its warmth. This audience reads manufactured emotion immediately — and disengages just as fast."',
+             'Priya S., Brand Strategist', 'Asstes/Navbar/Priya.png'],
+          ], 600);
+          setTimeout(onDone, 1300); break;
+
+        case 3:
+          appendNarrative(stage, 'I\'m surfacing two ways forward that both stay true to the brief. One leans into what Jordan said about wanting to recognize their actual dog — that\'s the one I\'d recommend.', 350);
+          setTimeout(onDone, 700); break;
+
+        case 4:
+          // Final phase — no onDone, sequence stops here
+          appendNarrative(stage, 'Here are two paths that work within Jordan\'s brief:', 300);
+          appendOptions(stage, 600);
+          appendNarrative(stage, 'Option 1 matches what Jordan emphasized — you\'d recognize the real dog, it feels warm, not generic.', 3800);
+          appendActionBar(stage, 4400);
+          break;
+      }
+    }
+
+    /* ── Main sequence ───────────────────────────────────── */
+    let stageEls = {};
+
+    function runPhase(idx) {
+      const stage = appendStage(idx);
+      stageEls[idx] = stage;
+      const textEl = document.getElementById('cpThink' + idx);
+
+      startCycling(idx, textEl);
+
+      setTimeout(() => {
+        stopCycling(idx);
+        markDone(idx, () => {
+          setTimeout(() => {
+            revealContent(idx, stage, () => {
+              if (idx < 4) setTimeout(() => runPhase(idx + 1), 500);
+            });
+          }, 200);
+        });
+      }, DURATIONS[idx]);
+    }
+
+    /* ── Reset ───────────────────────────────────────────── */
+    function reset() {
+      Object.keys(_cycling).forEach(k => { _cycling[k] = false; });
+      Object.keys(_timers).forEach(k => clearTimeout(_timers[k]));
+      Array.from(body.children).forEach(el => {
+        if (!el.classList.contains('cp-spacer')) el.remove();
+      });
+      stageEls = {};
+    }
+
+    function restart() { reset(); setTimeout(() => runPhase(0), 120); }
+
+    runPhase(0);
+  </script>
+</body>
+</html>

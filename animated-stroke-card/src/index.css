@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes spin-gradient {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 360deg;
+  }
+}
+
+.animated-glow-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 16px;
+}
+
+.animated-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  z-index: -1;
+  background: conic-gradient(
+    from var(--angle),
+    #ff69b4,
+    #FF529A,
+    #ff4681,
+    #ef4444,
+    #ff614c,
+    #f97316,
+    #ffa938,
+    #ff69b4
+  );
+  animation: spin-gradient 5s linear infinite;
+}
+
+.animated-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: -24px;
+  border-radius: 44px;
+  z-index: -2;
+  background: conic-gradient(
+    from var(--angle),
+    #ff69b4,
+    #FF529A,
+    #ff4681,
+    #ef4444,
+    #ff614c,
+    #f97316,
+    #ffa938,
+    #ff69b4
+  );
+  animation: spin-gradient 5s linear infinite;
+  filter: blur(50px);
+  opacity: 0.3;
+}

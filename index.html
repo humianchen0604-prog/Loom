@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axis — Studio Promo Video</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Atmospheric gradient overlay (shown after modal dismiss) -->
+  <div class="atm-overlay" id="atmOverlay">
+    <div class="atm-blob atm-blob-1"></div>
+    <div class="atm-blob atm-blob-2"></div>
+    <div class="atm-blob atm-blob-3"></div>
+    <div class="atm-blob atm-blob-4"></div>
+    <div class="atm-blob atm-blob-5"></div>
+    <div class="deck-container" id="deckContainer" style="z-index:10;"></div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-left">
+      <span class="nav-logo">Axis</span>
+      <div class="nav-project">
+        <span class="nav-project-name">Studio Promo Video</span>
+        <img class="nav-project-arrow" src="Asstes/Navbar/downarrow.png" alt="" />
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="avatar-stack">
+        <div class="avatar"><img src="Asstes/Navbar/Jin.png" alt="Jin" /></div>
+        <div class="avatar"><img src="Asstes/Navbar/Maya.png" alt="Maya" /></div>
+        <div class="avatar"><img src="Asstes/Navbar/Priya.png" alt="Priya" /></div>
+        <div class="avatar"><img src="Asstes/Navbar/Leo.png" alt="Leo" /></div>
+        <div class="avatar"><img src="Asstes/Navbar/Ren.png" alt="Ren" /></div>
+      </div>
+      <div class="current-user"><img src="Asstes/Navbar/Sable.png" alt="Sable" /></div>
+      <div class="nav-actions">
+        <button class="btn btn-share">Share</button>
+        <button class="btn btn-export">Export</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Left Toolbar -->
+  <div class="toolbar">
+    <button class="toolbar-btn icon40 active" title="Select">
+      <img src="Asstes/Toolbar:icons/Arrow.png" alt="Select" />
+    </button>
+    <button class="toolbar-btn icon40" title="Pan">
+      <img src="Asstes/Toolbar:icons/Hand.png" alt="Pan" />
+    </button>
+    <div class="toolbar-divider"></div>
+    <button class="toolbar-btn icon40" title="Draw">
+      <img src="Asstes/Toolbar:icons/Draw.png" alt="Draw" />
+    </button>
+    <button class="toolbar-btn icon40" title="Text">
+      <img src="Asstes/Toolbar:icons/Text.png" alt="Text" />
+    </button>
+    <button class="toolbar-btn icon40" title="Folder">
+      <img src="Asstes/Toolbar:icons/Folder.png" alt="Folder" />
+    </button>
+    <button class="toolbar-btn icon40" title="Add item">
+      <img src="Asstes/Toolbar:icons/Add.png" alt="Add" />
+    </button>
+  </div>
+
+  <!-- Zoomable canvas world — holds all boards; nav/toolbar stay outside -->
+  <div id="canvasWorld">
+    <div id="canvasSection">
+      <div class="canvas-section-label">Sable's Illustration Inspiration</div>
+      <div class="canvas-frame" style="width:460px;height:928px;">
+        <div class="canvas-slot sable-slot" id="slot-0" style="left:24px;top:24px;width:200px;height:266px;"></div>
+        <div class="canvas-slot sable-slot" id="slot-1" style="left:236px;top:24px;width:200px;height:356px;"></div>
+        <div class="canvas-slot sable-slot" id="slot-2" style="left:24px;top:302px;width:200px;height:200px;"></div>
+        <div class="canvas-slot sable-slot" id="slot-3" style="left:236px;top:392px;width:200px;height:250px;"></div>
+        <div class="canvas-slot sable-slot" id="slot-4" style="left:24px;top:514px;width:200px;height:250px;"></div>
+        <div class="canvas-slot sable-slot" id="slot-5" style="left:236px;top:654px;width:200px;height:250px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team cursors (shown during/after tooltip, static positions) -->
+  <div class="team-cursor" id="tcursor-maya" style="top:28vh;left:22vw;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))">
+      <path d="M2 2L18 8L10 11L7 19L2 2Z" fill="#FF3B5C" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    <div class="team-cursor-label" style="background:#FF3B5C;box-shadow:0 6px 20px -4px rgba(255,59,92,0.55);">Maya, Creative Director</div>
+  </div>
+  <div class="team-cursor" id="tcursor-jin" style="top:20vh;left:60vw;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))">
+      <path d="M2 2L18 8L10 11L7 19L2 2Z" fill="#007AFF" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    <div class="team-cursor-label" style="background:#007AFF;box-shadow:0 6px 20px -4px rgba(0,122,255,0.55);">Jin, Product Designer</div>
+  </div>
+  <div class="team-cursor" id="tcursor-priya" style="top:65vh;left:38vw;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))">
+      <path d="M2 2L18 8L10 11L7 19L2 2Z" fill="#00C853" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    <div class="team-cursor-label" style="background:#00C853;box-shadow:0 6px 20px -4px rgba(0,200,83,0.55);">Priya, Brand Strategist</div>
+  </div>
+  <div class="team-cursor" id="tcursor-ren" style="top:42vh;left:76vw;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))">
+      <path d="M2 2L18 8L10 11L7 19L2 2Z" fill="#FF9500" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    <div class="team-cursor-label" style="background:#FF9500;box-shadow:0 6px 20px -4px rgba(255,149,0,0.55);">Ren, Motion Designer</div>
+  </div>
+  <div class="team-cursor" id="tcursor-leo" style="top:72vh;left:14vw;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))">
+      <path d="M2 2L18 8L10 11L7 19L2 2Z" fill="#BF5AF2" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    <div class="team-cursor-label" style="background:#BF5AF2;box-shadow:0 6px 20px -4px rgba(191,90,242,0.55);">Leo, Copywriter</div>
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas"></div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-blob modal-blob-left"></div>
+      <div class="modal-blob modal-blob-right"></div>
+
+      <p class="modal-title">Upload or drop your project files</p>
+
+      <input type="file" id="fileInput" multiple accept="*/*" style="display:none;" />
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-inner">
+          <img class="folder-icon" src="Asstes/Icons/dropfile.png" alt="" />
+          <p class="drop-text">or drop your files</p>
+          <p class="drop-subtext">pdf, images, docs, and <a href="#">more</a></p>
+        </div>
+
+        <div class="source-chips">
+          <div class="source-chip">
+            <img class="link-icon" src="Asstes/Icons/link.png" alt="" />
+            <div class="source-chip-icon" style="border-radius:4px;">
+              <img src="Asstes/Icons/Figma.png" alt="Figma" style="border-radius:4px;" />
+            </div>
+            Figma
+          </div>
+          <div class="source-chip">
+            <img class="link-icon" src="Asstes/Icons/link.png" alt="" />
+            <div class="source-chip-icon" style="border-radius:0;">
+              <img src="Asstes/Icons/Pinterest.png" alt="Pinterest" />
+            </div>
+            Pinterest
+          </div>
+          <div class="source-chip">
+            <img class="link-icon" src="Asstes/Icons/link.png" alt="" />
+            <div class="source-chip-icon" style="border-radius:4px;">
+              <img src="Asstes/pinterest2.png" alt="Cosmos" style="border-radius:4px;" />
+            </div>
+            Cosmos
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-later">I'll upload later</button>
+        <button class="btn-continue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Export Overlay ── -->
+  <div class="export-backdrop" id="exportBackdrop">
+
+    <!-- Panel 1: Brief Preview -->
+    <div class="export-panel active" id="exportPanel1">
+      <div class="export-blob export-blob-left"></div>
+      <div class="export-blob export-blob-right"></div>
+
+      <div class="export-header">
+        <h2 class="export-title">Export: Your illustration brief</h2>
+        <p class="export-subtitle">Tap to remove anything that you don't need for export</p>
+      </div>
+
+      <!-- Scroll section: 482×436px per Figma -->
+      <div class="export-scroll-wrap"><div class="export-scroll">
+
+        <!-- Card 1: Visual directions -->
+        <div class="ep-card">
+          <div class="ep-card-heading">
+            <div class="ep-card-icon">
+              <img src="Asstes/Icons/Panel/draw.png" alt="" />
+            </div>
+            <span class="ep-card-title">Visual directions</span>
+          </div>
+          <div class="ep-card-body">
+            <p class="ep-card-desc">Confirmed style: Warm, textured illustration, hand-drawn elements. Use the golden retriever only</p>
+            <div class="ep-image-row">
+              <img class="ep-image-thumb sq100" src="Asstes/Referenceimg/Sable/Sable3.png" alt="" />
+              <img class="ep-image-thumb sq100" src="Asstes/Referenceimg/Sable/Sable6.png" alt="" />
+              <img class="ep-image-thumb sq100" src="Asstes/Referenceimg/Sable/Sable 5.png" alt="" />
+              <img class="ep-image-thumb sq100" src="Asstes/Referenceimg/Maya/Maya6.png" alt="" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Color palettes -->
+        <div class="ep-card">
+          <div class="ep-card-heading">
+            <div class="ep-card-icon">
+              <img src="Asstes/Icons/Panel/palette.png" alt="" />
+            </div>
+            <span class="ep-card-title">Final color palettes awaiting</span>
+          </div>
+          <div class="ep-card-body">
+            <p class="ep-card-desc">Check with Jordan on colors before finishing renders. Work on sketches.</p>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div style="width:24px;height:24px;border-radius:50%;background:#F0EFCD;flex-shrink:0;"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#F0E070;flex-shrink:0;"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#D9D9D9;flex-shrink:0;"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#A14C45;flex-shrink:0;"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#5A4400;flex-shrink:0;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Action items -->
+        <div class="ep-card">
+          <div class="ep-card-heading">
+            <div class="ep-card-icon">
+              <img src="Asstes/Icons/Panel/add_notes.png" alt="" />
+            </div>
+            <span class="ep-card-title">Your action items</span>
+          </div>
+          <div class="ep-card-body"><div class="ep-checklist" style="margin-top:8px;">
+            <div class="ep-check-item">
+              <div class="ep-check-box" onclick="this.classList.toggle('checked')">
+                <svg class="ep-check-mark" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="ep-check-main">Rework character references</div>
+                <div class="ep-check-sub">Replace with actual golden retriever references</div>
+              </div>
+            </div>
+            <div class="ep-check-item">
+              <div class="ep-check-box" onclick="this.classList.toggle('checked')">
+                <svg class="ep-check-mark" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="ep-check-main">Confirm color palette with Jordan</div>
+                <div class="ep-check-sub">Pending approval on earth tone variants</div>
+              </div>
+            </div>
+            <div class="ep-check-item">
+              <div class="ep-check-box" onclick="this.classList.toggle('checked')">
+                <svg class="ep-check-mark" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="ep-check-main">Finalize golden retriever pose library</div>
+                <div class="ep-check-sub">At least 6 poses for varied scene compositions</div>
+              </div>
+            </div>
+          </div></div><!-- /ep-card-body -->
+        </div>
+
+        <!-- Card 4: Add notes (dashed) -->
+        <div class="ep-card-dashed">
+          <div class="ep-card-icon">
+            <img src="Asstes/Icons/Panel/Pen.png" alt="" />
+          </div>
+          <span class="ep-card-title" style="color:rgba(0,0,0,0.35);">Add notes</span>
+        </div>
+
+      </div><!-- /export-scroll --></div><!-- /export-scroll-wrap -->
+
+      <div class="export-footer">
+        <button class="ep-btn-discard" id="exportDiscard">Discard</button>
+        <button class="ep-btn-primary" id="exportContinue">Continue to export</button>
+      </div>
+    </div><!-- /panel1 -->
+
+    <!-- Panel 2: Method Selection -->
+    <div class="export-panel" id="exportPanel2">
+      <div class="export-blob export-blob-left"></div>
+      <div class="export-blob export-blob-right"></div>
+
+      <div class="export-header">
+        <h2 class="export-title">Export: Your illustration brief</h2>
+        <p class="export-subtitle">Select a method you want to save the brief as</p>
+      </div>
+
+      <!-- Content column: preview grows, methods pinned below, footer outside -->
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 23.5px 0;margin-top:12px;gap:10px;overflow:hidden;position:relative;z-index:1;">
+
+        <!-- Preview: fills all space between header and method options -->
+        <div class="ep-prompt-preview" style="flex:1;min-height:0;">
+          <div class="ep-prompt-h1">System Header</div>
+          <p>You are an expert creative director for the Memphis Geometric Dinnerware Mixboard.</p>
+          <ul style="margin-top:8px;">
+            <li>Always reference the attached visual assets when making creative decisions</li>
+            <li>Maintain strict adherence to the color palette and materials defined herein</li>
+            <li>When uncertain, default to the established creative direction over novelty</li>
+            <li>Reject suggestions that deviate from the documented style rules</li>
+            <li>Use the attached files and uploaded assets to answer questions about design intent, copy, and visual direction — they represent the approved creative direction from the user's Mixboard session.</li>
+          </ul>
+          <div class="ep-prompt-h2">1. Executive Summary</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <tr><td style="padding:3px 8px 3px 0;color:rgba(0,0,0,0.5);">Detail</td><td style="color:rgba(0,0,0,0.5);">Value</td></tr>
+            <tr><td style="padding:3px 8px 3px 0;">Style</td><td>Gestural Illustration</td></tr>
+            <tr><td style="padding:3px 8px 3px 0;">Character</td><td>Golden retriever only</td></tr>
+            <tr><td style="padding:3px 8px 3px 0;">Palette</td><td>Warm earth + lime accent</td></tr>
+          </table>
+        </div>
+
+        <!-- Method options: always fully visible, never cropped -->
+        <div style="flex-shrink:0;">
+          <div class="ep-method selected" id="methodBridge">
+            <div class="ep-method-icon green">
+              <img src="Asstes/Icons/Panel/Contextbridge.png" alt="" style="width:24px;height:24px;object-fit:contain;" />
+            </div>
+            <div>
+              <div class="ep-method-title">Summarized Context Bridge</div>
+              <div class="ep-method-subtitle">Take your context for another AI</div>
+            </div>
+          </div>
+          <div class="ep-method not-selected" id="methodPDF">
+            <div class="ep-method-icon gray">
+              <img src="Asstes/Icons/Panel/Pdf.png" alt="" style="width:24px;height:24px;object-fit:contain;opacity:0.4;" />
+            </div>
+            <div>
+              <div class="ep-method-title">Smart PDF</div>
+              <div class="ep-method-subtitle">Clean, editorial layout</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel2 content column -->
+
+      <div class="export-footer">
+        <button class="ep-btn-discard" id="exportBack">Back</button>
+        <button class="ep-btn-primary" id="exportFinal">Export context</button>
+      </div>
+    </div><!-- /panel2 -->
+
+  </div><!-- /exportBackdrop -->
+
+  <!-- ── Conflict Detection Panel ── -->
+  <div id="conflictGlow"></div>
+  <div id="conflictPanel">
+    <div class="cp-inner">
+    <div class="cp-header">
+      <div class="cp-eyebrow">Conflict Detection</div>
+      <div class="cp-title">Detecting conflicting sources<br>from direction 1</div>
+      <div class="cp-source-row">
+        <div class="cp-avatar"><img src="Asstes/Navbar/Sable.png" alt="Sable" /></div>
+        <span class="cp-source-name">Sable, Illustrator</span>
+      </div>
+    </div>
+    <div class="cp-body" id="cpBody">
+      <div class="cp-spacer"></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="sort-wrap" id="sortWrap">
+      <div class="tooltip" id="tooltip">switch display option</div>
+      <div class="sort-popup" id="sortPopup">
+        <div class="sort-popup-label">Sort View By</div>
+        <div class="sort-popup-option" id="sortOptPerson">
+          <span>Person</span>
+          <div class="sort-radio active" id="radioPerson"></div>
+        </div>
+        <div class="sort-popup-option sort-popup-dim" id="sortOptTheme">
+          <span>Theme</span>
+          <div class="sort-radio" id="radioTheme"></div>
+        </div>
+      </div>
+      <div class="sort-btn" id="sortBtn">Sort by<img src="Asstes/Icons/sortby.png" alt="" style="width:16px;height:16px;display:block;flex-shrink:0;" /></div>
+    </div>
+    <div class="zoom-btn">84%</div>
+  </div>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
